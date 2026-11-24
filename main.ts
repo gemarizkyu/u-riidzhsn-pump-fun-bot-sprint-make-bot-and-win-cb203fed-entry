@@ -6,12 +6,12 @@
 // coin from its CreateEvent, waits for proof that the coin can actually run,
 // and only then buys the first deep pullback — the "second wind".
 //
-// Entry idea, in one line: a coin that ran at least +30% off its create price
+// Entry idea, in one line: a coin that ran at least +40% off its create price
 // and then gave back at least 12% from its peak is a runner catching its
 // breath, not a launch that never moved. Buying the dip of a proven runner
 // beats buying every birth: most births never move at all, and the ones that
 // do usually dump straight through a launch sniper's stop. The bot only buys
-// once the price has bounced at least 4% off its post-peak trough, so it
+// once the price has bounced at least 6% off its post-peak trough, so it
 // buys a turn, not a coin still in freefall.
 //
 // Guardrails shape everything else:
@@ -39,7 +39,7 @@ const BPS = 10_000n;
 const DIP_STAKE = (SOL * 8n) / 100n; // 0.08 SOL per dip buy
 const DIP_MIN_AGE = 2; // slots since create before a dip may be bought
 const DIP_MAX_AGE = 90; // ... and after this the coin is too old to chase
-const DIP_MIN_RUNUP_BPS = 13_000n; // peak must have run +30% over create
+const DIP_MIN_RUNUP_BPS = 14_000n; // peak must have run +40% over create
 const DIP_MIN_ABOVE_CREATE_BPS = 10_500n; // still +5% over create now
 const DIP_PULLBACK_BPS = 8_800n; // now at most 88% of the peak (-12%)
 const DIP_REAL_MIN = SOL / 2n; // real reserves 0.5 .. 40 SOL
@@ -58,9 +58,9 @@ const PROBE_RUNUP_MIN_BPS = 8_000n; // price now 0.8x .. 2.5x of create
 const PROBE_RUNUP_MAX_BPS = 25_000n;
 
 // --- exits -----------------------------------------------------------------
-const TAKE_PROFIT_BPS = 11_200n; // sell at +12% over cost
-const STOP_LOSS_BPS = 9_000n; // sell at -10% under cost
-const MAX_HOLD_SLOTS = 25; // give up after twenty-five slots
+const TAKE_PROFIT_BPS = 10_800n; // sell at +8% over cost
+const STOP_LOSS_BPS = 9_200n; // sell at -8% under cost
+const MAX_HOLD_SLOTS = 20; // give up after twenty slots
 const STALE_SLOTS = 60; // ... or after sixty slots with no trade
 const BUY_SLIPPAGE_BPS = 500;
 const SELL_SLIPPAGE_BPS = 10_000;
@@ -307,7 +307,7 @@ function decideOrders(state: BotState, batch: Batch): OrderInput[] {
         coin.peakBps >= DIP_MIN_RUNUP_BPS &&
         nowBps >= DIP_MIN_ABOVE_CREATE_BPS &&
         nowBps * BPS <= coin.peakBps * DIP_PULLBACK_BPS &&
-        nowBps * BPS >= coin.troughBps * 10_400n &&
+        nowBps * BPS >= coin.troughBps * 10_600n &&
         !coin.devSold &&
         coin.bigSellBps <= DIP_MAX_BIG_SELL_BPS &&
         realSol >= DIP_REAL_MIN &&
