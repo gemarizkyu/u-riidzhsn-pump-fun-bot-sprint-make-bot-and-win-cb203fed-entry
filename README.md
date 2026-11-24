@@ -8,8 +8,8 @@ A second-wind dip-buying paper-trading bot for make.fun's "Pump.fun Bot Sprint: 
 
 ## Strategy
 
-- **Entry:** every coin is watched from its CreateEvent. The bot buys only after a coin proves it can run — peak price at least +30% over its create price — and then pulls back at least 12% from that peak, with the creator still holding, no big outsider dump, and healthy real reserves. Buying the dip of a proven runner beats buying every birth: most births never move, and the ones that do usually dump straight through.
-- **Exits:** take profit at +18% over cost, stop loss at -12%, never hold past 30 slots, and leave at once when the creator sells or the coin goes stale.
+- **Entry:** every coin is watched from its CreateEvent. The bot buys only after a coin proves it can run — peak price at least +30% over its create price — and then pulls back at least 12% from that peak, with the creator still holding, no big outsider dump, and healthy real reserves. It buys only once the price has bounced at least 4% off its post-peak trough, so it buys a turn, not a coin still in freefall.
+- **Exits:** take profit at +12% over cost, stop loss at -10%, never hold past 25 slots, and leave at once when the creator sells or the coin goes stale.
 - **Guardrail pacing:** tiny paced probe buys (0.02 SOL, at most one per 900 slots, thirty at most) keep the run above the minimum bar — a round trip of at least 0.01 SOL on each of at least 20 coins — when dip entries alone run thin.
 - **Why this shape:** chasing momentum after a run-up loses on the replay — by the time a rise shows in the tape the dump has usually started. Waiting for the first deep pullback of a coin that already ran buys the same momentum cheaper, with a hard exit when the bounce fails.
 

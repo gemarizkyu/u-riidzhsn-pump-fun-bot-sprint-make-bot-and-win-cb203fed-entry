@@ -10,7 +10,9 @@
 // and then gave back at least 12% from its peak is a runner catching its
 // breath, not a launch that never moved. Buying the dip of a proven runner
 // beats buying every birth: most births never move at all, and the ones that
-// do usually dump straight through a launch sniper's stop.
+// do usually dump straight through a launch sniper's stop. The bot only buys
+// once the price has bounced at least 4% off its post-peak trough, so it
+// buys a turn, not a coin still in freefall.
 //
 // Guardrails shape everything else:
 // - The run must round-trip at least 0.01 SOL on each of at least 20 coins,
@@ -56,9 +58,9 @@ const PROBE_RUNUP_MIN_BPS = 8_000n; // price now 0.8x .. 2.5x of create
 const PROBE_RUNUP_MAX_BPS = 25_000n;
 
 // --- exits -----------------------------------------------------------------
-const TAKE_PROFIT_BPS = 11_800n; // sell at +18% over cost
-const STOP_LOSS_BPS = 8_800n; // sell at -12% under cost
-const MAX_HOLD_SLOTS = 30; // give up after thirty slots
+const TAKE_PROFIT_BPS = 11_200n; // sell at +12% over cost
+const STOP_LOSS_BPS = 9_000n; // sell at -10% under cost
+const MAX_HOLD_SLOTS = 25; // give up after twenty-five slots
 const STALE_SLOTS = 60; // ... or after sixty slots with no trade
 const BUY_SLIPPAGE_BPS = 500;
 const SELL_SLIPPAGE_BPS = 10_000;
@@ -75,6 +77,7 @@ type CoinNote = {
   createVq: bigint; // virtual quote reserves at creation
   createVt: bigint; // virtual token reserves at creation
   peakBps: bigint; // best price vs create, in bps (10_000 = create price)
+  troughBps: bigint; // lowest price since the peak was set (bounce check)
   devBuy: bigint; // creator buys in the create slot, lamports
   devSold: boolean;
   bigSellBps: bigint; // largest single outsider sell, bps of real reserves
@@ -122,6 +125,7 @@ function absorbEvents(batch: Batch, slot: number): void {
         createVq: BigInt(event.virtual_quote_reserves),
         createVt: BigInt(event.virtual_token_reserves),
         peakBps: BPS,
+        troughBps: BPS,
         devBuy: 0n,
         devSold: false,
         bigSellBps: 0n,
@@ -158,7 +162,9 @@ function absorbEvents(batch: Batch, slot: number): void {
   }
 }
 
-// Refresh each tracked coin's peak price from the latest known reserves.
+// Refresh each tracked coin's peak price from the latest known reserves,
+// and the trough since that peak: a coin still falling sets a new trough
+// every batch, so the trough only stops moving once the fall has paused.
 // Marks only cover held or pending mints, so fall back to the curve table.
 function refreshPeaks(state: BotState): void {
   for (const [mint, note] of coins) {
@@ -171,7 +177,12 @@ function refreshPeaks(state: BotState): void {
       note.createVq,
       note.createVt,
     );
-    if (now > note.peakBps) note.peakBps = now;
+    if (now > note.peakBps) {
+      note.peakBps = now;
+      note.troughBps = now;
+    } else if (now < note.troughBps) {
+      note.troughBps = now;
+    }
   }
 }
 
@@ -287,13 +298,16 @@ function decideOrders(state: BotState, batch: Batch): OrderInput[] {
       coin.createVt,
     );
 
-    // Dip buy: proven runner, pulled back from its peak, creator still in.
+    // Dip buy: proven runner, pulled back from its peak, creator still in,
+    // and the price has bounced at least 4% off its post-peak trough, so the
+    // bot buys a turn, not a coin still in freefall.
     if (age >= DIP_MIN_AGE && age <= DIP_MAX_AGE && open < maxOpen) {
       const realSol = curve.real_quote_reserves;
       const dipReady =
         coin.peakBps >= DIP_MIN_RUNUP_BPS &&
         nowBps >= DIP_MIN_ABOVE_CREATE_BPS &&
         nowBps * BPS <= coin.peakBps * DIP_PULLBACK_BPS &&
+        nowBps * BPS >= coin.troughBps * 10_400n &&
         !coin.devSold &&
         coin.bigSellBps <= DIP_MAX_BIG_SELL_BPS &&
         realSol >= DIP_REAL_MIN &&
