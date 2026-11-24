@@ -11,7 +11,7 @@
 // breath, not a launch that never moved. Buying the dip of a proven runner
 // beats buying every birth: most births never move at all, and the ones that
 // do usually dump straight through a launch sniper's stop. The bot only buys
-// once the price has bounced at least 6% off its post-peak trough, so it
+// once the price has bounced at least 8% off its post-peak trough, so it
 // buys a turn, not a coin still in freefall.
 //
 // Guardrails shape everything else:
@@ -58,9 +58,9 @@ const PROBE_RUNUP_MIN_BPS = 8_000n; // price now 0.8x .. 2.5x of create
 const PROBE_RUNUP_MAX_BPS = 25_000n;
 
 // --- exits -----------------------------------------------------------------
-const TAKE_PROFIT_BPS = 10_800n; // sell at +8% over cost
-const STOP_LOSS_BPS = 9_200n; // sell at -8% under cost
-const MAX_HOLD_SLOTS = 20; // give up after twenty slots
+const TAKE_PROFIT_BPS = 10_600n; // sell at +6% over cost
+const STOP_LOSS_BPS = 9_400n; // sell at -6% under cost
+const MAX_HOLD_SLOTS = 15; // give up after fifteen slots
 const STALE_SLOTS = 60; // ... or after sixty slots with no trade
 const BUY_SLIPPAGE_BPS = 500;
 const SELL_SLIPPAGE_BPS = 10_000;
@@ -307,7 +307,7 @@ function decideOrders(state: BotState, batch: Batch): OrderInput[] {
         coin.peakBps >= DIP_MIN_RUNUP_BPS &&
         nowBps >= DIP_MIN_ABOVE_CREATE_BPS &&
         nowBps * BPS <= coin.peakBps * DIP_PULLBACK_BPS &&
-        nowBps * BPS >= coin.troughBps * 10_600n &&
+        nowBps * BPS >= coin.troughBps * 10_800n &&
         !coin.devSold &&
         coin.bigSellBps <= DIP_MAX_BIG_SELL_BPS &&
         realSol >= DIP_REAL_MIN &&
